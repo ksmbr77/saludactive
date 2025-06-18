@@ -9,18 +9,31 @@ export default function VSLPageMinimal() {
   const [hasShownPopup, setHasShownPopup] = useState(false)
 
   useEffect(() => {
-    // Load the video script
+    // Load the video script with error handling
     const script = document.createElement("script")
     script.src =
       "https://scripts.converteai.net/7e36cdf6-8f2d-4adf-9c73-eb7c42755be9/players/68509a8aa01e999124c76568/player.js"
     script.async = true
-    document.head.appendChild(script)
+    script.id = "converteai-script"
+
+    script.onload = () => {
+      console.log("Video script loaded successfully")
+    }
+
+    script.onerror = () => {
+      console.error("Failed to load video script")
+    }
+
+    // Check if script already exists
+    const existingScript = document.getElementById("converteai-script")
+    if (!existingScript) {
+      document.head.appendChild(script)
+    }
 
     return () => {
-      // Cleanup script on unmount
-      const existingScript = document.querySelector(`script[src="${script.src}"]`)
-      if (existingScript) {
-        existingScript.remove()
+      const scriptToRemove = document.getElementById("converteai-script")
+      if (scriptToRemove) {
+        scriptToRemove.remove()
       }
     }
   }, [])
@@ -40,7 +53,8 @@ export default function VSLPageMinimal() {
   }, [])
 
   useEffect(() => {
-    // Exit intent detection for both desktop and mobile
+    if (hasShownPopup) return
+
     let timeOnPage = 0
     const timeInterval = setInterval(() => {
       timeOnPage += 1000
@@ -48,43 +62,48 @@ export default function VSLPageMinimal() {
 
     // Desktop: Mouse leave detection
     const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 0 && !hasShownPopup) {
+      if (e.clientY <= 0 && !hasShownPopup && timeOnPage > 3000) {
         setShowExitPopup(true)
         setHasShownPopup(true)
       }
     }
 
-    // Mobile: Page visibility change (when user switches tabs/apps)
+    // Mobile: Page visibility change
     const handleVisibilityChange = () => {
       if (document.hidden && !hasShownPopup && timeOnPage > 10000) {
-        // After 10 seconds on page
         setShowExitPopup(true)
         setHasShownPopup(true)
       }
     }
 
     // Mobile: Back button detection
-    const handlePopState = () => {
-      if (!hasShownPopup) {
+    const handlePopState = (e: PopStateEvent) => {
+      e.preventDefault()
+      if (!hasShownPopup && timeOnPage > 5000) {
         setShowExitPopup(true)
         setHasShownPopup(true)
-        // Push state back to prevent actual navigation
         window.history.pushState(null, "", window.location.href)
       }
     }
 
-    // Mobile: Touch events for swipe up detection
+    // Mobile: Touch events for swipe detection
     let startY = 0
+    let startTime = 0
+
     const handleTouchStart = (e: TouchEvent) => {
       startY = e.touches[0].clientY
+      startTime = Date.now()
     }
 
     const handleTouchMove = (e: TouchEvent) => {
+      if (!e.touches[0]) return
+
       const currentY = e.touches[0].clientY
       const diffY = startY - currentY
+      const timeDiff = Date.now() - startTime
 
-      // If swiping up significantly and near top of page
-      if (diffY > 100 && window.scrollY < 100 && !hasShownPopup && timeOnPage > 5000) {
+      // Fast upward swipe near top of page
+      if (diffY > 50 && timeDiff < 300 && window.scrollY < 100 && !hasShownPopup && timeOnPage > 5000) {
         setShowExitPopup(true)
         setHasShownPopup(true)
       }
@@ -97,7 +116,7 @@ export default function VSLPageMinimal() {
     document.addEventListener("touchstart", handleTouchStart, { passive: true })
     document.addEventListener("touchmove", handleTouchMove, { passive: true })
 
-    // Push initial state for back button detection
+    // Push initial state
     window.history.pushState(null, "", window.location.href)
 
     return () => {
