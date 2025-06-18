@@ -10,28 +10,31 @@ export default function VSLPageMinimal() {
 
   useEffect(() => {
     // Load the video script with error handling
-    const script = document.createElement("script")
-    script.src =
-      "https://scripts.converteai.net/7e36cdf6-8f2d-4adf-9c73-eb7c42755be9/players/68509a8aa01e999124c76568/player.js"
-    script.async = true
-    script.id = "converteai-script"
-
-    script.onload = () => {
-      console.log("Video script loaded successfully")
-    }
-
-    script.onerror = () => {
-      console.error("Failed to load video script")
-    }
+    const scriptId = "scr_68509a8aa01e999124c76568"
 
     // Check if script already exists
-    const existingScript = document.getElementById("converteai-script")
+    const existingScript = document.getElementById(scriptId)
     if (!existingScript) {
+      const script = document.createElement("script")
+      script.src =
+        "https://scripts.converteai.net/7e36cdf6-8f2d-4adf-9c73-eb7c42755be9/players/68509a8aa01e999124c76568/player.js"
+      script.async = true
+      script.id = scriptId
+      script.type = "text/javascript"
+
+      script.onload = () => {
+        console.log("Video script loaded successfully")
+      }
+
+      script.onerror = () => {
+        console.error("Failed to load video script")
+      }
+
       document.head.appendChild(script)
     }
 
     return () => {
-      const scriptToRemove = document.getElementById("converteai-script")
+      const scriptToRemove = document.getElementById(scriptId)
       if (scriptToRemove) {
         scriptToRemove.remove()
       }
@@ -157,13 +160,13 @@ export default function VSLPageMinimal() {
         {/* Video Section - Embedded */}
         <div className="mb-6 sm:mb-8">
           <div className="max-w-3xl mx-auto">
-            {/* Embedded Video */}
+            {/* VSL Embed Converteai */}
             <div
               id="vid_68509a8aa01e999124c76568"
               style={{
                 position: "relative",
                 width: "100%",
-                padding: "56.25% 0 0", // 16:9 aspect ratio
+                padding: "178.22% 0 0",
                 borderRadius: "8px",
                 overflow: "hidden",
                 boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 5px 10px -5px rgba(0, 0, 0, 0.04)",
@@ -195,6 +198,7 @@ export default function VSLPageMinimal() {
                 }}
               ></div>
             </div>
+            {/* End VSL Embed */}
           </div>
 
           {/* Animated Viewer Count */}
